@@ -6,26 +6,33 @@ from scipy.stats import chi2_contingency
 
 df = pd.read_excel(r'C:\Users\Ceren\Desktop\STAT365_Project\student_behavior.xlsx')
 
-contingency_table = pd.crosstab(
-    [df["Where do you stay?"], df["What is your CGPA?"]],
-    df["I attend classes?"])
+# Clean column names (remove spaces, ? marks, etc.)
+df.columns = (
+    df.columns
+    .str.strip()
+    .str.replace(r'[^\w\s]', '', regex=True)  # remove special chars
+    .str.replace(" ", "_")                    # replace spaces with underscore
+)
 
-chi2, p_value, dof, expected = chi2_contingency(contingency_table)
-print("Chi-square:", chi2)
-print("Degrees of freedom:", dof)
-print("p-value:", p_value)
+print(df.columns)
+print(df.isna().sum())
 
+#Relationship between Sparing Time for Yourself and Where You Stay
+plt.figure(figsize=(10,6))
+sns.barplot(
+    x="Where_do_you_stay",
+    y="I_spare_enough_time_for_myself",
+    data=df,
+    order=df.groupby("Where_do_you_stay")["I_spare_enough_time_for_myself"]
+         .mean().sort_values(ascending= False).index,
+    color="blue"
+)
 
+plt.title("Relationship Between Where You Stay and Sparing Time for Yourself")
+plt.xlabel("Where you stay")
+plt.ylabel("Sparing Time for Yourself")
+plt.show()
 
-df["Group"] = np.where(
-    df["Where do you stay?"].isin(["At home with family", "At home without family"]),
-    "home","dorm")
-
-homee = df[df["Group"] == "home"].copy()
-dormm = df[df["Group"] == "dorm"].copy()
-
-
-#Visualizations
 
 # Social Life Distribution
 plt.figure(figsize=(8,5))
