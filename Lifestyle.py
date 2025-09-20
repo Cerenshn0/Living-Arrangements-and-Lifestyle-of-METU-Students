@@ -33,6 +33,18 @@ plt.xlabel("Where you stay")
 plt.ylabel("Sparing Time for Yourself")
 plt.show()
 
+#Is there a statistically significant relationship between sparing time for yourself and where you stay?
+from scipy.stats import kruskal
+groups = [g["I_spare_enough_time_for_myself"].values 
+          for _, g in df.groupby("Where_do_you_stay")] # Group by accommodation type
+
+stat, p = kruskal(*groups)
+print(f"Kruskal-Wallis (Spare time ~ Stay): H={stat:.3f}, p={p:.4f}")
+
+
+
+
+
 
 #Satisfaction of Accomodation by Where You Stay
 plt.figure(figsize=(8,5))
@@ -44,6 +56,14 @@ plt.title("Satisfaction of Accomodation by Where You Stay")
 plt.xlabel("Where do you stay?")
 plt.ylabel("Count")
 plt.show()
+
+#Is there a statistically significant relationship between satisfaction of accomodation and where you stay?
+groups2 = [group["I_am_happy_with_my_accommodation"].values 
+          for name, group in df.groupby("Where_do_you_stay")] # Group by accommodation type
+
+stat2, p2 = kruskal(*groups2) # Kruskal–Wallis test
+print(f"Kruskal-Wallis (Satisfaction of accomodation ~ Accomodation place): H={stat2:.3f}, p={p2:.4f}")
+
 
 
 
@@ -62,79 +82,37 @@ plt.show()
 print(df.loc[df["Where_do_you_stay"]=="At home with family","I_attend_classes"].value_counts())
 
 
+#Is there a statistically significant relationship between class attendance and where you stay?
+groups3 = [g["I_attend_classes"].values 
+          for _, g in df.groupby("Where_do_you_stay")]
+
+stat3, p3 = kruskal(*groups3)
+print(f"Kruskal-Wallis (Attendance ~ Stay): H={stat3:.3f}, p={p3:.4f}")
 
 
 
+#Social Life Distribution with CGPA
+stacked_data = pd.crosstab(
+    df["How_much_time_do_you_spend_for_your_social_life_per_day"],
+    df["What_is_your_CGPA"],
+    normalize="index") #Normalize
 
-#
-grades = df["What_grade_are_you_in"].unique()
-fig, axes = plt.subplots(2, 3, figsize=(15,10), sharex=True)
-
-for ax, grade in zip(axes.flat, grades):
-    sns.barplot(
-        data=df[df["What_grade_are_you_in"]==grade],
-        x="What_is_your_CGPA",
-        y="How_much_time_do_you_spend_for_your_social_life_per_day",
-        estimator=lambda x: x.mean(),
-        palette="coolwarm",
-        orient="h",
-        ax=ax
-    )
-    ax.set_title(f"Grade {grade}")
-    ax.set_xlabel("Average CGPA")                     # x label
-    ax.set_ylabel("Social Life per Day") 
-
+stacked_data.plot(
+    kind="bar",
+    stacked=True,
+    figsize=(10,6),
+    colormap="tab20"
+)
+plt.title("Social Life Distribution with CGPA")
+plt.xlabel("Social Life per Day")
+plt.ylabel("Proportion")
+plt.legend(title="CGPA", bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
 plt.show()
 
+#Is there a statistically significant relationship between social life and CGPA?
+groups4 = [g["How_much_time_do_you_spend_for_your_social_life_per_day"].values 
+          for _, g in df.groupby("What_is_your_CGPA")]
 
-
-
-
-
-
-
-# Social Life Distribution
-plt.figure(figsize=(8,5))
-sns.barplot(
-    data=df,
-    x="Where do you stay?",
-    y="How much time do you spend for your social life per day?",
-    color="purple",
-    order=["At dorm in campus", "At dorm out of campus", "At home with family", "At home without family"]
-)
-plt.title("Average Social Life by Stay Location")
-plt.xlabel("Stay Location")
-plt.ylabel("Average Social Life (hours per day)")
-plt.show()
-
-# Accommodation Satisfaction
-plt.figure(figsize=(8,5))
-sns.countplot(
-    data=df,
-    x="Where do you stay?",
-    hue="I am happy with my accommodation.",
-    palette="viridis",
-    order=["At dorm in campus", "At dorm out of campus", "At home with family", "At home without family"]
-)
-plt.title("Accommodation Satisfaction by Stay Location")
-plt.xlabel("Stay Location")
-plt.ylabel("Count")
-plt.legend(title="Satisfaction Level")
-plt.show()
-
-
-# Personal Time (faceted by Stay Location)
-g = sns.catplot(
-    data=df,
-    x="Department",
-    kind="count",            # count students per department
-    col="Where do you stay?", # facet by stay location
-    col_wrap=2,
-    color="blue",
-    height=4,
-    order=sorted(df['Department'].unique()) # optional: order departments alphabetically
-)
-g.fig.subplots_adjust(top=0.85)
-g.fig.suptitle("Number of Students by Department and Stay Location")
-plt.show()
+stat4, p4 = kruskal(*groups4)
+print(f"Kruskal-Wallis (Social life ~ CGPA): H={stat4:.3f}, p={p4:.4f}")
